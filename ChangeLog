@@ -1,0 +1,17 @@
+ChangeLog
+*********
+
+2014-10-09  Enrico M. Crisostomo  <enrico.m.crisostomo@gmail.com>
+
+	release: stable major release 1.0.0:
+
+		* AUTHORS: Create.
+		* COPYING: Create.
+		* ChangeLog: Create.
+		* INSTALL: Create.
+		* Makefile.am: Add initial version.
+		* NEWS: Create.
+		* README: Create.
+		* autogen.sh: Add script to bootstrap the GNU Build System.
+		* configure.ac: Add initial version.
+		* dsc: Add initial version.

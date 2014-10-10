@@ -1,0 +1,159 @@
+#!@ZSH_PATH@
+# -*- coding: utf-8; mode: sh; indent-tabs-mode: nil; tab-width: 2; sh-basic-offset: 2; sh-indentation: 2; fill-column: 75; -*-
+#
+# Copyright (C) 2014, Enrico M. Crisostomo <enrico.m.crisostomo@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3, or (at your option)
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+set -o nounset
+set -o errexit
+
+setopt localoptions
+unsetopt glob_subst
+
+typeset -a mail_output
+typeset -a DSC_ADDRESSES
+
+: ${FS_USAGE_THRESHOLD=80}
+: ${DSC_SEND_MAIL=0}
+: ${DSC_PARSER_FRIENDLY=false}
+: ${DSC_QUIET=false}
+: ${HAVE_COLUMN=@HAVE_COLUMN@}
+: ${MAIL_CMD=@MAIL_PATH@}
+: ${DISK_SPACE_CMD="df -Ph | grep \"^/\""}
+
+usage()
+{
+  print -- "Usage: dsc [-t threshold] [-h]"
+  exit 1
+}
+
+print_help()
+{
+  print "Usage: dsc [-hpq] [-m address] [-t threshold]"
+  print ""
+  print "  -h          Print this help message."
+  print "  -m address  Send a mail to the specified address."
+  print "              Multiple addresses can be specified using this option multiple times."
+  print "  -p          Format output in a parser-friendly way."
+  print "  -q          Do not write any output to stdout."
+  print "  -t value    Use the specified threshold."
+  print ""
+  print "Report bugs to <enrico.m.crisostomo@gmail.com>."
+
+  exit 0
+}
+
+while getopts ":hm:pqt:" o 
+do
+  case $o in 
+    h)
+      print_help
+      ;;
+    m)
+      DSC_SEND_MAIL=1
+      DSC_ADDRESSES+=( ${OPTARG} )
+      ;;
+    p)
+      DSC_PARSER_FRIENDLY=true
+      ;;
+    q)
+      DSC_QUIET=true
+      ;;
+    t)
+      OPT_THRESHOLD=${OPTARG}
+      (( ${OPT_THRESHOLD} > 0 && ${OPT_THRESHOLD} <= 100 )) || {
+        >&2 echo "Invalid threshold value."
+        usage
+      }
+      FS_USAGE_THRESHOLD=${OPT_THRESHOLD}
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+shift $((OPTIND-1))
+
+[ $# -eq 0 ] || {
+  print -- Invalid syntax.
+  return 1
+}
+
+notify_fs_usage()
+{
+  # This function expects the following parameters:
+  # $1 Name of the device.
+  # $2 Space usage.
+  mail_output+=( "$1 $2" )
+}
+
+check_output_and_report()
+{
+  local output_body
+
+  # Header is only printed when output is not parser friendly.
+  if ! ${DSC_PARSER_FRIENDLY}
+  then
+    output_body=${output_body}"DEVICE USAGE\n"
+  fi
+
+  for rec in ${mail_output}
+  do
+    output_body=${output_body}"${${=rec}[1]} ${${=rec}[2]}%\n"
+  done
+
+  # When output is not parser friendly, pipe through column in order to
+  # beautify it and align columns.
+  if ! ${DSC_PARSER_FRIENDLY}
+  then
+    output_body=$(echo ${output_body} | column -t)
+  fi
+
+  if (( ${#mail_output} > 0 ))
+  then
+    if (( ${DSC_SEND_MAIL} == 1 ))    
+    then
+      print -- ${output_body} | ${MAIL_CMD} -s "[dsc] Some device is above the threshold ${FS_USAGE_THRESHOLD}%." ${DSC_ADDRESSES}
+    fi
+
+    if ! ${DSC_QUIET}
+    then
+      print -- ${output_body}
+    fi
+  fi
+}
+
+eval ${DISK_SPACE_CMD} | while read fs_record
+do
+  FS_RECORD=( ${=fs_record} )
+
+  FS_NAME=${FS_RECORD[1]}
+  FS_USAGE_P=${FS_RECORD[5]}
+
+  if [[ ! ${FS_USAGE_P} =~ "[[:digit:]]*%" ]]
+  then
+    print -- ${FS_USAGE_P} is not a valid space usage.
+    continue
+  fi
+
+  FS_USAGE=${FS_USAGE_P%"%"}
+
+  if (( ${FS_USAGE} >= ${FS_USAGE_THRESHOLD} ))
+  then
+    notify_fs_usage ${FS_NAME} ${FS_USAGE}
+  fi
+done
+
+check_output_and_report

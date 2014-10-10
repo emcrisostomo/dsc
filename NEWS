@@ -1,0 +1,9 @@
+NEWS
+****
+
+New in 1.0.0:
+
+  * Check locally mounted devices.
+  * Configure usage threshold from the command line.
+  * Notify users on standard output and by mail.
+  * Parser-friendly output.
