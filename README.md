@@ -1,22 +1,24 @@
 README
 ======
 
-`dsc` is a UNIX shell script that checks the usage percentage or local disks
-and notifies the user if any is above the specified threshold.  Notifications
-are written by default on the standard output and, optionally, can be sent by
-email.
+`dsc` is a UNIX shell script that checks the usage percentage of mounted disks
+and notifies the user if any of them is above the specified threshold.
+Notifications are written by default on the standard output and, optionally,
+can be sent by email.
 
 Getting dsc
------------------------------
+-----------
 
-The recommended way to install `dsc` in a machine is getting a release tarball.
-A release tarball contains everything a user needs to build and install this
-software on a system, following the instructions detailed in the Installation
-section below and the INSTALL file.
+The recommended way to install `dsc` in a machine is getting a
+[release tarball][release].  A release tarball contains everything a user needs
+to build and install this software on a system, following the instructions
+detailed in the Installation section below and the INSTALL file.
 
 Getting a copy of the source repository is not recommended, unless you are a
 developer, you have the GNU Build System installed on your machine and you know
 how to boostrap it on the sources.
+
+[release]: https://github.com/emcrisostomo/dsc/releases
 
 Installation
 ------------
