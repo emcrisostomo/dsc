@@ -26,6 +26,20 @@ Installation
 See the `INSTALL` file for detailed information about how to configure and
 install this software.
 
+Dependencies
+------------
+
+`dsc` depends on the following programs:
+
+  * The Z Shell (`zsh`).
+  * The `mail` local mail transfer agent (MTA).
+  * The `df` command.
+  * The `column` command (optional).
+
+All mandatory dependencies must be present when running `configure`.  If any
+dependency is missing, `configure` will fail and emit a meaningful error
+message.
+
 Bug Reports
 -----------
 
