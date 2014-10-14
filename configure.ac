@@ -51,14 +51,6 @@ COLUMN_PATH=${ac_cv_path_column}
 AC_SUBST([COLUMN_PATH])
 AC_SUBST([HAVE_COLUMN])
 
-AC_PATH_PROG([mail], [mail], [no])
-if test x"${ac_cv_path_mail}" = x"no"
-then
-  AC_MSG_ERROR([This script requires mail.])
-fi
-MAIL_PATH=${ac_cv_path_mail}
-AC_SUBST([MAIL_PATH])
-
 # Checks for libraries.
 
 # Checks for header files.

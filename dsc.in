@@ -23,31 +23,24 @@ setopt localoptions
 unsetopt glob_subst
 
 typeset -a mail_output
-typeset -a DSC_ADDRESSES
 
 : ${FS_USAGE_THRESHOLD=80}
-: ${DSC_SEND_MAIL=0}
 : ${DSC_PARSER_FRIENDLY=false}
-: ${DSC_QUIET=false}
 : ${HAVE_COLUMN=@HAVE_COLUMN@}
-: ${MAIL_CMD=@MAIL_PATH@}
 : ${DISK_SPACE_CMD="df -Ph | grep \"^/\""}
 
 usage()
 {
-  print -- "Usage: dsc [-t threshold] [-h]"
+  print -- "Usage: dsc [-hp] [-t threshold]"
   exit 1
 }
 
 print_help()
 {
-  print "Usage: dsc [-hpq] [-m address] [-t threshold]"
+  print "Usage: dsc [-hp] [-t threshold]"
   print ""
   print "  -h          Print this help message."
-  print "  -m address  Send a mail to the specified address."
-  print "              Multiple addresses can be specified using this option multiple times."
   print "  -p          Format output in a parser-friendly way."
-  print "  -q          Do not write any output to stdout."
   print "  -t value    Use the specified threshold."
   print ""
   print "Report bugs to <enrico.m.crisostomo@gmail.com>."
@@ -55,21 +48,14 @@ print_help()
   exit 0
 }
 
-while getopts ":hm:pqt:" o 
+while getopts ":hpt:" o 
 do
   case $o in 
     h)
       print_help
       ;;
-    m)
-      DSC_SEND_MAIL=1
-      DSC_ADDRESSES+=( ${OPTARG} )
-      ;;
     p)
       DSC_PARSER_FRIENDLY=true
-      ;;
-    q)
-      DSC_QUIET=true
       ;;
     t)
       OPT_THRESHOLD=${OPTARG}
@@ -118,20 +104,12 @@ check_output_and_report()
   # beautify it and align columns.
   if ! ${DSC_PARSER_FRIENDLY}
   then
-    output_body=$(echo ${output_body} | column -t)
+    output_body=$(echo ${output_body} | column -t)"\n"
   fi
 
   if (( ${#mail_output} > 0 ))
   then
-    if (( ${DSC_SEND_MAIL} == 1 ))    
-    then
-      print -- ${output_body} | ${MAIL_CMD} -s "[dsc] Some device is above the threshold ${FS_USAGE_THRESHOLD}%." ${DSC_ADDRESSES}
-    fi
-
-    if ! ${DSC_QUIET}
-    then
-      print -- ${output_body}
-    fi
+      print -n -- ${output_body}
   fi
 }
 
